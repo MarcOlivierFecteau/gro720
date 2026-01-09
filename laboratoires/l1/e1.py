@@ -45,22 +45,29 @@ def main() -> None:
         dtype=np.float32,
     )
     Bs: list[Array2D] = []
-    num_epochs = int(100_000)
+    epochses: list[list[int]] = []
+    losseses: list[list[float]] = []
+
+    num_epochs = int(10_000)
     learning_rates = (0.005, 0.001, 0.01)
     # NOTE: 0.01 results in `nan` -> too high a rate.
 
-    for i, learning_rate in enumerate(learning_rates, start=1):
+    for learning_rate in learning_rates:
         B = np.random.rand(*A.shape).astype(A.dtype)
         B_star, epochs, losses = train(A, B, learning_rate, num_epochs)
         Bs.append(B_star)
+        epochses.append(epochs)
+        losseses.append(losses)
 
-        fig = plt.figure(i, figsize=(8, 6))
-        ax = fig.add_subplot()
-        ax.semilogx(epochs, losses)
-        ax.set_title(f"Matrice 3x3, pas: {learning_rate}")
-        ax.set_xlabel("époque")
-        ax.set_ylabel("L")
-        fig.tight_layout()
+    fig = plt.figure(3, figsize=(8, 6))
+    ax = fig.add_subplot()
+    for epochs, losses, learning_rate in zip(epochses, losseses, learning_rates):
+        ax.loglog(epochs, losses, label=f"mu={learning_rate}")
+    ax.set_title("Matrice 3x3")
+    ax.set_xlabel("époque")
+    ax.set_ylabel("L")
+    ax.legend()
+    fig.tight_layout()
 
     # Display results
     print("=" * 30)
@@ -82,25 +89,32 @@ def main() -> None:
         dtype=np.float32,
     )
     B6s: list[Array2D] = []
-    num_epochs = 1_000_000
-    learning_rates = (0.001, 0.0001)
+    epochses: list[list[int]] = []
+    losseses: list[list[float]] = []
+
+    num_epochs = 500_000
+    learning_rates = (0.001, 0.0005, 0.0001)
     # NOTE:
     #   - 0.005 results in `nan` -> too high a learning rate.
-    #   - 10'000 and 100'000 epochs: too low to reach adequate results.
-    #   - 1M epochs too low for 0.0001 learning rate.
+    #   - 10'000 and 100'000 epochs too low to reach adequate results.
+    #   - 1M epochs too low for 0.0001 learning rate. -> 0.0001 too low a rate for 6x6 matrix.
 
-    for i, learning_rate in enumerate(learning_rates, start=4):
+    for learning_rate in learning_rates:
         B = np.random.rand(*A.shape).astype(A.dtype)
         B_star, epochs, losses = train(A, B, learning_rate, num_epochs)
         B6s.append(B_star)
+        epochses.append(epochs)
+        losseses.append(losses)
 
-        fig = plt.figure(i, figsize=(8, 6))
-        ax = fig.add_subplot()
-        ax.semilogx(epochs, losses)
-        ax.set_title(f"Matrice 6x6, pas: {learning_rate}")
-        ax.set_xlabel("époque")
-        ax.set_ylabel("L")
-        fig.tight_layout()
+    fig = plt.figure(6, figsize=(8, 6))
+    ax = fig.add_subplot()
+    for epochs, losses, learning_rate in zip(epochses, losseses, learning_rates):
+        ax.loglog(epochs, losses, label=f"mu={learning_rate}")
+    ax.set_title("Matrice 6x6")
+    ax.set_xlabel("époque")
+    ax.set_ylabel("L")
+    ax.legend()
+    fig.tight_layout()
 
     # Display results
     print("=" * 30)
@@ -117,21 +131,28 @@ def main() -> None:
         dtype=np.float32,
     )  # NOTE: Singular matrix.
     B4s: list[Array2D] = []
-    num_epochs = 100_000
-    learning_rates = (0.001, 0.0001)
+    epochses: list[list[int]] = []
+    losseses: list[list[float]] = []
 
-    for i, learning_rate in enumerate(learning_rates, start=6):
+    num_epochs = 10_000
+    learning_rates = (0.001, 0.0005, 0.0001)
+
+    for learning_rate in learning_rates:
         B = np.random.rand(*A.shape).astype(A.dtype)
         B_star, epochs, losses = train(A, B, learning_rate, num_epochs)
         B4s.append(B_star)
+        epochses.append(epochs)
+        losseses.append(losses)
 
-        fig = plt.figure(i, figsize=(8, 6))
-        ax = fig.add_subplot()
-        ax.semilogx(epochs, losses)
-        ax.set_title(f"Matrice 4x4 (Singulière), pas: {learning_rate}")
-        ax.set_xlabel("époque")
-        ax.set_ylabel("L")
-        fig.tight_layout()
+    fig = plt.figure(4, figsize=(8, 6))
+    ax = fig.add_subplot()
+    for epochs, losses, learning_rate in zip(epochses, losseses, learning_rates):
+        ax.loglog(epochs, losses, label=f"mu={learning_rate}")
+    ax.set_title("Matrice 4x4 (Singulière)")
+    ax.set_xlabel("époque")
+    ax.set_ylabel("L")
+    ax.legend()
+    fig.tight_layout()
     # NOTE: Linear regression model does NOT know that A in singular, and
     #       still tries to find its inverse.
 
