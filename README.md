@@ -4,7 +4,7 @@
 
 [uv](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2) n'est pas nécessaire pour exécuter les scripts, mais simplifie la gestion des environnements virtuels Python.
 
-## Comment utiliser
+## Comment Utiliser
 
 Windows Terminal (Powershell):
 
@@ -44,7 +44,17 @@ source .venv/bin/activate  # Activer l'environnement virtuel
 
 Pour les commandes Python, remplacer `python` par `python3` (ou votre alias vers l'exécutable Python).
 
-## Mise à jour
+## Formatage du Code
+
+Idéalement, avant de _push_ un _commit_ au _remote_, formater le code:
+
+```console
+uvx ruff format
+```
+
+Le fichier [`ruff.toml`](./ruff.toml) contient les paramètres de formatage utilisés.
+
+## Mise à Jour
 
 Pour mettre à jour les versions des dépendances, utiliser `uv`.
 
