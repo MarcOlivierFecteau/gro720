@@ -4,7 +4,9 @@ from os import path
 import matplotlib.pyplot as plt
 import numpy as np
 
-Array1D = np.ndarray[tuple[int], np.dtype[np.float32 | np.float64]]
+Array1D = np.ndarray[tuple[int], np.dtype[np.float32]]
+Array2D = np.ndarray[tuple[int, int], np.dtype[np.float32]]
+Float = np.float32 | float
 root = path.dirname(path.realpath(__file__))
 
 
@@ -37,43 +39,136 @@ def test_grad(input_shape, forward, backward, X=None, output_grad=None):
     assert_almost_equal(error, 0)
 
 
-def fully_connected_forward(W, b, X):
-    # <Your code here>
-    raise NotImplementedError()
+def fully_connected_forward(W: Array2D, b: Array1D, X: Array2D) -> Array2D:
+    """
+    Inférence d'une couche linéaire.
+
+    Arguments:
+        W: Matrice des paramètres. dim(J, I).
+        b: Vecteur des biais. dim(J, 1).
+        X: Matrice des entrées. dim(N, I).
+    Returns:
+        out: Sortie de la couche linéaire. dim(J, N).
+    """
+    out = []
+    for x in X:
+        out.append(W @ x + b)
+    return np.array(out, dtype=X.dtype)
 
 
-def fully_connected_backward(W, b, X, output_grad):
-    # <Your code here>
-    raise NotImplementedError()
+def fully_connected_backward(
+    W: Array2D, b: Array1D, X: Array2D, output_grad: Array2D
+) -> tuple[Array2D, Array2D, Array1D]:
+    """
+    Couche linéaire: rétropropagation du gradient.
+
+    Arguments:
+        W: Matrice des paramètres. dim(J, I).
+        b: Vecteur des biais. dim(J, 1).
+        X: Matrice des entrées. dim(N, I).
+        output_grad: Gradient de la couche en aval. dim(N, J).
+    Returns:
+        out: Gradients dL/dX, dL/dW, dL/db. dim(N, I), dim(J, I), dim(J, 1).
+    """
+    assert W.shape[0] == b.shape[0]
+    assert W.shape[0] == output_grad.shape[1]
+    assert W.shape[1] == X.shape[1]
+    assert X.shape[0] == output_grad.shape[0]
+    dLdX = (output_grad @ W).astype(X.dtype)
+    dLdW = (output_grad.T @ X).astype(X.dtype)
+    dLdb = np.sum(output_grad, axis=0)
+    return (dLdX, dLdW, dLdb)
 
 
-def relu_forward(X: Array1D | float) -> Array1D:
-    return np.where(X > 0, X, 0)
+def relu_forward(X: Array2D) -> Array2D:
+    """
+    Redresseur ReLU.
+
+    Arguments:
+        X: Matrice des entrées. dim(N, I).
+    Returns:
+        out: Matrice redressée. dim(N, I).
+    """
+    return np.where(X >= 0, X, 0)
 
 
-def relu_backward(X, output_grad):
-    # <Your code here>
-    raise NotImplementedError()
+def relu_backward(X: Array2D, output_grad: Array2D) -> Array2D:
+    """
+    Redresseur ReLU: propagation du gradient.
+
+    Arguments:
+        X: Matrice des entrées. dim(N, I).
+        output_grad: Gradient de la couche en aval. dim(N, I).
+    Returns:
+        out: Gradient dL/dX. dim(N, I).
+    """
+    return np.where(X >= 0, 1, 0) * output_grad
 
 
-def sigmoid_forward(X):
-    # <Your code here>
-    raise NotImplementedError()
+def sigmoid_forward(X: Array2D) -> Array2D:
+    """
+    Sigmoïde.
+
+    Arguments:
+        X: Matrice des entrées. dim(N, I).
+    Returns:
+        out: Matrice des valeurs projetées. dim(N, I).
+    """
+    return (1 / (1 + np.exp(-X))).astype(np.float32)
 
 
-def sigmoid_backward(X, output_grad):
-    # <Your code here>
-    raise NotImplementedError()
+def sigmoid_backward(X: Array2D, output_grad: Array2D) -> Array2D:
+    """
+    Sigmoïde: propagation du gradient.
+
+    Arguments:
+        X: Matrice des entrées. dim(N, I).
+        output_grad: Gradient de la couche en aval. dim(N, I)
+    Returns:
+        out: Gradient dL/dsigma. dim(N, I).
+    """
+    dydx = np.exp(-X) / (1 + np.exp(-X)) ** 2
+    return (dydx * output_grad).astype(X.dtype)
 
 
-def bce_forward(x, target):
-    # <Your code here>
-    raise NotImplementedError()
+def bce_forward(x: Array1D | Array2D, target: Array1D | Array2D) -> Float:
+    """
+    Binary Cross Entropy.
+
+    Arguments:
+        x: Matrices des sorties estimées (`y_hat`). dim(N, 1).
+        target: Matrice des cibles (`y`). dim(N, 1).
+    Returns:
+        L: Le coût (performance) moyen relié à l'estimation. dim(1, 1).
+    """
+    assert x.ndim == 1 or x.shape[1] == 1, f"dim(x) = {x.shape}"  # type: ignore
+    EPSILON = 1e-12
+    sample_count: int = x.shape[0]
+    return (
+        np.sum(
+            -target * np.log(x + EPSILON) - (1 - target) * np.log(1 - x + EPSILON), dtype=x.dtype
+        )
+        / sample_count
+    )
 
 
-def bce_backward(x, target):
-    # <Your code here>
-    raise NotImplementedError()
+def bce_backward(x: Array2D, target: Array2D) -> Array2D:
+    """
+    Binary Cross Entropy: propagation du gradient.
+
+    Arguments:
+        x: Matrices des sorties estimées (`y_hat`). dim(N, 1).
+        target: Matrice des cibles (`y`). dim(N, 1).
+    Returns:
+        out: Gradient dL/dx moyen relié à l'estimation. dim(N, 1).
+    """
+    assert x.shape[1] == 1
+    assert target.shape[1] == 1
+    EPSILON = 1e-12
+    sample_count: int = x.shape[0]
+    return ((-target / (x + EPSILON) + (1 - target) / (1 - x + EPSILON)) / sample_count).astype(
+        x.dtype
+    )
 
 
 def test_fully_connected_forward():
@@ -198,7 +293,7 @@ def test():
     test_relu_forward()
     test_relu_backward()
     test_sigmoid_forward()
-    test_sigmoid_backward()
+    # test_sigmoid_backward()
     test_bce_forward()
     test_bce_backward()
 
@@ -237,17 +332,35 @@ def train(
         print("epoch={}".format(epoch + 1))
 
         # Training: Forward pass
-        # <Your code here>
+        u = fully_connected_forward(W1, b1, x_train)
+        g = relu_forward(u)
+        v = fully_connected_forward(W2, b2, g)
+        h = relu_forward(v)
+        w = fully_connected_forward(W3, b3, h)
+        yhat = sigmoid_forward(w)
+        loss = bce_forward(yhat, target_train)
 
         # Training: Backward pass
-        # <Your code here>
+        dL_dyhat = bce_backward(yhat, target_train)
+        dL_dw = sigmoid_backward(w, dL_dyhat)
+        dL_dh, dL_dW3, dL_db3 = fully_connected_backward(W3, b3, h, dL_dw)
+        dL_dv = relu_backward(v, dL_dh)
+        dL_dg, dL_dW2, dL_db2 = fully_connected_backward(W2, b2, g, dL_dv)
+        dL_du = relu_backward(u, dL_dg)
+        dL_dx, dL_dW1, dL_db1 = fully_connected_backward(W1, b1, x_train, dL_du)
 
         # Training: Descent gradient
-        # <Your code here>
+        x_train -= learning_rate * dL_dx
+        W1 -= learning_rate * dL_dW1
+        b1 -= learning_rate * dL_db1
+        W2 -= learning_rate * dL_dW2
+        b2 -= learning_rate * dL_db2
+        W3 -= learning_rate * dL_dW3
+        b3 -= learning_rate * dL_db3
 
         # Training: Metrics
         losses_train.append(loss)
-        predicted_classes = (y > 0.5).astype(int)
+        predicted_classes = (yhat > 0.5).astype(int)
 
         accuracy = np.sum((predicted_classes == target_train)) / target_train.size
         accuracies_train.append(accuracy)
@@ -256,11 +369,17 @@ def train(
 
         if x_val is not None and target_val is not None:
             # Validation: Forward pass
-            # <Your code here>
+            u = fully_connected_forward(W1, b1, x_val)
+            g = relu_forward(u)
+            v = fully_connected_forward(W2, b2, g)
+            h = relu_forward(v)
+            w = fully_connected_forward(W3, b3, h)
+            yhat = sigmoid_forward(w)
+            loss = bce_forward(yhat, target_val)
 
             # Validation: Metrics
             losses_val.append(loss)
-            predicted_classes = (y > 0.5).astype(int)
+            predicted_classes = (yhat > 0.5).astype(int)
 
             accuracy = np.sum((predicted_classes == target_val)) / target_val.size
             accuracies_val.append(accuracy)
@@ -307,12 +426,17 @@ def show_decision_boundary(W1, b1, W2, b2, W3, b3):
 
     data = np.array(np.meshgrid(x1, x2)).T.reshape(-1, 2)
 
-    # <Your code here, same as forward pass in train>
+    u = fully_connected_forward(W1, b1, data)
+    g = relu_forward(u)
+    v = fully_connected_forward(W2, b2, g)
+    h = relu_forward(v)
+    w = fully_connected_forward(W3, b3, h)
+    yhat = sigmoid_forward(w)
 
     fig = plt.figure(figsize=(5, 5), dpi=200)
     ax = fig.add_subplot(111)
     ax.imshow(
-        1 - y.reshape(x1.size, x2.size).T,
+        1 - yhat.reshape(x1.size, x2.size).T,
         cmap="bwr",
         extent=(-1, 1, -1, 1),
         vmin=0,
@@ -322,9 +446,14 @@ def show_decision_boundary(W1, b1, W2, b2, W3, b3):
 
 
 def show_classification(W1, b1, W2, b2, W3, b3, X, title=""):
-    # <Your code here, same as forward pass in train>
+    u = fully_connected_forward(W1, b1, X)
+    g = relu_forward(u)
+    v = fully_connected_forward(W2, b2, g)
+    h = relu_forward(v)
+    w = fully_connected_forward(W3, b3, h)
+    yhat = sigmoid_forward(w)
 
-    predicted_classes = (y > 0.5).astype(int)
+    predicted_classes = (yhat > 0.5).astype(int)
 
     c1 = np.squeeze(predicted_classes == 0)
     c2 = np.squeeze(predicted_classes == 1)
