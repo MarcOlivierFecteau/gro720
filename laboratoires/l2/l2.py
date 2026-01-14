@@ -185,9 +185,9 @@ def test_fully_connected_forward():
 
 def test_fully_connected_backward():
     print("------test_fully_connected_backward------")
-    X = np.random.randn(2, 4)
-    W = np.random.randn(10, 4)
-    b = np.random.randn(10)
+    X = np.random.randn(2, 4).astype(np.float32)
+    W = np.random.randn(10, 4).astype(np.float32)
+    b = np.random.randn(10).astype(np.float32)
 
     def forward_X(X):
         return fully_connected_forward(W, b, X)
@@ -265,7 +265,7 @@ def test_bce_forward():
     print("------------test_bce_forward-------------")
     x = np.array([0.1, 0.6])
     target = np.array([0.0, 1.0])
-    y = bce_forward(x, target)
+    y = float(bce_forward(x, target))
 
     assert_almost_equal(y, 0.3081)
     print("\tOk")
@@ -310,18 +310,24 @@ def train(
 
     W1 = np.random.normal(
         loc=0.0, scale=np.sqrt(2 / (counts[0] + counts[1])), size=(counts[1], counts[0])
+    ).astype(np.float32)
+    b1 = np.random.normal(loc=0.0, scale=np.sqrt(2 / counts[1]), size=(counts[1],)).astype(
+        np.float32
     )
-    b1 = np.random.normal(loc=0.0, scale=np.sqrt(2 / counts[1]), size=(counts[1],))
 
     W2 = np.random.normal(
         loc=0.0, scale=np.sqrt(2 / (counts[1] + counts[2])), size=(counts[2], counts[1])
+    ).astype(np.float32)
+    b2 = np.random.normal(loc=0.0, scale=np.sqrt(2 / counts[2]), size=(counts[2],)).astype(
+        np.float32
     )
-    b2 = np.random.normal(loc=0.0, scale=np.sqrt(2 / counts[2]), size=(counts[2],))
 
     W3 = np.random.normal(
         loc=0.0, scale=np.sqrt(2 / (counts[2] + counts[3])), size=(counts[3], counts[2])
+    ).astype(np.float32)
+    b3 = np.random.normal(loc=0.0, scale=np.sqrt(2 / counts[3]), size=(counts[3],)).astype(
+        np.float32
     )
-    b3 = np.random.normal(loc=0.0, scale=np.sqrt(2 / counts[3]), size=(counts[3],))
 
     losses_train = []
     accuracies_train = []
@@ -424,7 +430,7 @@ def show_decision_boundary(W1, b1, W2, b2, W3, b3):
     x1 = np.arange(-1, 1, 0.01)
     x2 = np.arange(1, -1, -0.01)
 
-    data = np.array(np.meshgrid(x1, x2)).T.reshape(-1, 2)
+    data = np.array(np.meshgrid(x1, x2)).T.reshape(-1, 2).astype(np.float32)
 
     u = fully_connected_forward(W1, b1, data)
     g = relu_forward(u)
