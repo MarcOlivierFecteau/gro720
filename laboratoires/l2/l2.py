@@ -356,7 +356,6 @@ def train(
         dL_dx, dL_dW1, dL_db1 = fully_connected_backward(W1, b1, x_train, dL_du)
 
         # Training: Descent gradient
-        x_train -= learning_rate * dL_dx
         W1 -= learning_rate * dL_dW1
         b1 -= learning_rate * dL_db1
         W2 -= learning_rate * dL_dW2
