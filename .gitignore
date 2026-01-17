@@ -10,5 +10,8 @@ wheels/
 .venv
 
 # Local files
+.vscode/
+.ruff_cache/
+*.pkl
 *.pkl.gz
 *.mp4
