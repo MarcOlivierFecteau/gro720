@@ -11,7 +11,9 @@ class SgdOptimizer(Optimizer):
         super().__init__(parameters)
         self.learning_rate = learning_rate
 
-    def _step_parameter(self, parameter: Array, parameter_grad: Array, parameter_name: str) -> Array:
+    def _step_parameter(
+        self, parameter: Array, parameter_grad: Array, parameter_name: str
+    ) -> Array:
         if parameter.shape != parameter_grad.shape:
             parameter_grad = parameter_grad.T
         parameter -= self.learning_rate * parameter_grad
