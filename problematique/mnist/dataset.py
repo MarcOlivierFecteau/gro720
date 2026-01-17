@@ -3,6 +3,7 @@ import os
 import pickle
 
 from dnn_framework.dataset import Dataset
+import sys
 
 
 class MnistDataset(Dataset):
@@ -28,3 +29,18 @@ class MnistDataset(Dataset):
 
     def __getitem__(self, index):
         return self._images[index], self._labels[index]
+
+
+if __name__ == "__main__":
+    # NOTE: Removes the deprecation warning
+    if len(sys.argv) > 1 and sys.argv[1] == "fix":
+        root = os.path.dirname(os.path.realpath(__file__))
+        splits = ["training", "validation", "testing"]
+
+        for split in splits:
+            path = os.path.join(root, f"mnist_{split}.pkl.gz")
+            with gzip.open(path, "rb") as file:
+                data = pickle.load(file)
+            with gzip.open(path, "wb") as file:
+                pickle.dump(data, file)
+            print(f"Saved mnist_{split}.pkl.gz")

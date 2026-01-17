@@ -1,6 +1,5 @@
 import os
 import time
-
 from tqdm import tqdm
 
 from dnn_framework.dataset import DatasetLoader
@@ -24,15 +23,16 @@ class Trainer:
         output_path,
     ):
         """
-        :param network: An instance of "Network" class
-        :param training_dataset: An instance of a class that inherits "Dataset"
-        :param validation_dataset: An instance of a class that inherits "Dataset"
-        :param test_dataset: An instance of a class that inherits "Dataset"
-        :param loss: An instance of a class that inherits "Loss"
-        :param optimizer: An instance of a class that inherits "Optimizer"
-        :param epoch_count: The number of epoch the network is train
-        :param batch_size: The training batch size
-        :param output_path: The output path
+        Arguments:
+            network: An instance of "Network" class
+            training_dataset: An instance of a class that inherits "Dataset"
+            validation_dataset: An instance of a class that inherits "Dataset"
+            test_dataset: An instance of a class that inherits "Dataset"
+            loss: An instance of a class that inherits "Loss"
+            optimizer: An instance of a class that inherits "Optimizer"
+            epoch_count: The number of epoch the network is train
+            batch_size: The training batch size
+            output_path: The output path
         """
         self._network = network
         self._epoch_count = epoch_count
@@ -114,9 +114,10 @@ class Trainer:
     def _measure_training_metrics(self, loss, network_output, target):
         """
         This method is call for each batch during the training to calculate some metrics.
-        :param loss: The batch loss
-        :param network_output: The batch output
-        :param target: The batch target
+        Arguments:
+            loss: The batch loss
+            network_output: The batch output
+            target: The batch target
         """
         raise NotImplementedError()
 
@@ -129,16 +130,20 @@ class Trainer:
     def _measure_validation_metrics(self, loss, network_output, target):
         """
         This method is call for each batch during the validation to calculate some metrics.
-        :param loss: The batch loss
-        :param network_output: The batch output
-        :param target: The batch target
+
+        Arguments:
+            loss: The batch loss
+            network_output: The batch output
+            target: The batch target
         """
         raise NotImplementedError()
 
     def _save_figures(self, output_path):
         """
         This method saves the learning curves.
-        :param output_path: The output path
+
+        Arguments:
+            output_path: The output path
         """
         raise NotImplementedError()
 
@@ -151,7 +156,9 @@ class Trainer:
     def _test(self, network, test_dataset_loader):
         """
         This method test the network with the test dataset.
-        :param network: The network
-        :param test_dataset_loader: The test dataset loader
+
+        Arguments:
+            network: The network.
+            test_dataset_loader: The test dataset loader.
         """
         raise NotImplementedError()
