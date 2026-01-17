@@ -12,20 +12,23 @@ class CrossEntropyLoss(Loss):
     def calculate(self, x: Array, target: Array) -> tuple[Float, Array]:
         """
         Arguments:
-            x: Matrice de la sortie estimée `y_hat`. dim(N, 1).
+            x: Matrice de la sortie estimée `y_hat`. dim(N, I).
             target: Matrice des cibles. dim(N, 1).
         Returns:
-            (loss, dLdx): Coût (perte) moyen (1 x 1) et dL/dx (N x 1).
+            (loss, dLdx): Coût (perte) moyen (1 x 1) et dL/dx (N x I).
         """
-        assert x.ndim == 1 or x.shape[1] == 1
         assert x.shape[0] == target.shape[0]
         EPSILON = 1e-9
         sample_count: int = x.shape[0]
-        sm = softmax(x)
-        loss = -np.sum(target * np.log(sm + EPSILON), dtype=x.dtype) / sample_count
-        dLdx = (x - target).astype(x.dtype)
+        yhat = softmax(x)
+
+        # One-hot encode target
+        target_one_hot = np.zeros_like(yhat)
+        target_one_hot[np.arange(sample_count), target] = 1  # type: ignore
+        loss = -np.sum(target_one_hot * np.log(yhat + EPSILON), axis=0)
+        dLdx = (yhat - target_one_hot).astype(x.dtype) / sample_count
         # NOTE: ^^^ Not sure how we obtain that expression (got it through Claude Haiku 4.5)
-        return (loss, dLdx)
+        return (np.sum(loss) / sample_count, dLdx)
 
 
 def softmax(x: Array) -> Array:
@@ -35,7 +38,7 @@ def softmax(x: Array) -> Array:
     Returns:
         out: Matrice des valeurs projetées. dim(N, I).
     """
-    return (np.exp(x) / np.sum(np.exp(x))).astype(x.dtype)
+    return (np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)).astype(x.dtype)
 
 
 class MeanSquaredErrorLoss(Loss):
@@ -51,9 +54,8 @@ class MeanSquaredErrorLoss(Loss):
         Returns:
             (loss, dLdx): Coût (perte) moyen (1 x 1) et dL/dx (N x 1).
         """
-        assert x.ndim == 1 or x.shape[1] == 1
         assert x.shape[0] == target.shape[0]
         sample_count: int = x.shape[0]
-        loss = np.sum((x - target) ** 2, dtype=x.dtype) / sample_count
-        dLdx = (2 * (x - target)).astype(x.dtype)
-        return (loss, dLdx)
+        loss = np.sum((x - target) ** 2, dtype=x.dtype, axis=0) / x.shape[1]
+        dLdx = (2 * (x - target)).astype(x.dtype) / x.shape[1]
+        return (np.sum(loss) / sample_count, dLdx / sample_count)
