@@ -13,10 +13,8 @@ class FullyConnectedLayer(Layer):
         super().__init__()
         self.input_count = input_count
         self.output_count = output_count
-        self.W = np.random.normal(
-            0, 2 / (input_count + output_count), (output_count, input_count)
-        )  # dim(J, I)
-        self.b = np.random.normal(0, 2 / (input_count + output_count), output_count)  # dim(J, 1)
+        self.W = np.random.uniform(-1, 1, (output_count, input_count))  # dim(J, I)
+        self.b = np.random.uniform(-1, 1, output_count)  # dim(J, I)
         assert self.W.ndim == 2
         assert self.b.ndim == 1
         assert self.W.shape[0] == self.b.shape[0]
