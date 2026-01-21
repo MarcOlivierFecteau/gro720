@@ -13,10 +13,8 @@ class FullyConnectedLayer(Layer):
         super().__init__()
         self.input_count = input_count
         self.output_count = output_count
-        self.W = np.random.normal(
-            0, 2 / (input_count + output_count), (output_count, input_count)
-        )  # dim(J, I)
-        self.b = np.random.normal(0, 2 / (input_count + output_count), output_count)  # dim(J, 1)
+        self.W = np.random.uniform(-1, 1, (output_count, input_count))  # dim(J, I)
+        self.b = np.random.uniform(-1, 1, output_count)  # dim(J, I)
         assert self.W.ndim == 2
         assert self.b.ndim == 1
         assert self.W.shape[0] == self.b.shape[0]
@@ -39,7 +37,7 @@ class FullyConnectedLayer(Layer):
         Returns:
             out: Matrice `y_hat`. dim(N, J).
         """
-        return ((x @ self.W.T + np.tile(self.b, (x.shape[0], 1))).astype(x.dtype), {"x": x})
+        return (x @ self.W.T + self.b, {"x": x})
 
     def backward(self, output_grad: Array, cache: dict[str, Any]) -> tuple[Array, dict[str, Any]]:
         """
@@ -54,9 +52,9 @@ class FullyConnectedLayer(Layer):
         assert self.W.shape[0] == output_grad.shape[1]
         assert self.W.shape[1] == cache["x"].shape[1]
         assert cache["x"].shape[0] == output_grad.shape[0]
-        dLdX = (output_grad @ self.W).astype(cache["x"].dtype)
-        dLdW = (output_grad.T @ cache["x"]).astype(cache["x"].dtype)
-        dLdb = np.sum(output_grad, axis=0, dtype=cache["x"].dtype)
+        dLdX = output_grad @ self.W
+        dLdW = output_grad.T @ cache["x"]
+        dLdb = np.sum(output_grad, axis=0)
         return (dLdX, {"w": dLdW, "b": dLdb})
 
 
@@ -101,7 +99,7 @@ class BatchNormalization(Layer):
 
         # Inference
         xhat = (x - batch_mean) / np.sqrt(batch_variance + self.epsilon)
-        yhat = (self.gamma * xhat + self.beta).astype(x.dtype)
+        yhat = self.gamma * xhat + self.beta
 
         return (yhat, {"x": x, "xhat": xhat, "batch_mean": batch_mean, "batch_var": batch_variance})
 
@@ -142,7 +140,7 @@ class Sigmoid(Layer):
         return {}
 
     def forward(self, x: Array) -> tuple[Array, dict[str, Array]]:
-        y = (1 / (1 + np.exp(-x))).astype(x.dtype)
+        y = 1 / (1 + np.exp(-x))
         return (y, {"y": y})
 
     def backward(self, output_grad: Array, cache: dict[str, Any]) -> tuple[Array, dict[str, Any]]:
@@ -155,7 +153,7 @@ class Sigmoid(Layer):
         Returns:
             out: Gradient dL/dx. dim(N, I).
         """
-        dLdx = ((1 - cache["y"]) * cache["y"] * output_grad).astype(cache["y"].dtype)
+        dLdx = (1 - cache["y"]) * cache["y"] * output_grad
         return (dLdx, {})
 
 
@@ -171,10 +169,9 @@ class ReLU(Layer):
         return {}
 
     def forward(self, x: Array) -> tuple[Array, dict[str, Any]]:
-        y_hat = np.where(x >= 0, x, 0).astype(x.dtype)
-        return (y_hat, {"x": x})
+        return (np.where(x >= 0, x, 0), {"x": x})
 
-    def backward(self, output_grad: Array, cache: dict[str, Any]):
+    def backward(self, output_grad: Array, cache: dict[str, Any]) -> tuple[Array, dict[str, Any]]:
         """
         Rétropropagation du gradient.
 
@@ -185,6 +182,6 @@ class ReLU(Layer):
             out: Gradient dL/dx. dim(N, I).
         """
         return (
-            (np.where(cache["x"] >= 0, 1, 0) * output_grad).astype(cache["x"].dtype),
+            np.where(cache["x"] >= 0, 1, 0) * output_grad,
             {},
         )

@@ -15,3 +15,4 @@ wheels/
 *.pkl
 *.pkl.gz
 *.mp4
+*.zip
